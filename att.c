@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <time.h>
 
 int conferirCPF(long long cpf, int *linha_usuario){// ponteiro dentro de uma função permite que a
@@ -47,10 +48,11 @@ int conferir_senha(int senha, int linha_usuario){
         return 1;
     
     fclose(fp);
+    return 0;
 };
 
 void menu(){
-    printf("---------------\n");
+    printf("\n---------------\n");
     printf("1. Consultar saldo\n");
     printf("2. Consultar extrato\n");
     printf("3. Depositar fundos\n");
@@ -105,6 +107,21 @@ void adicionar_linha_extrato(int linha_usuario, char operacao, float valor, char
     fclose(fp);
 }
 
+void sobrescrever_dados(int linha_usuario, long cpf, int senha, float moedas[]){
+    char nome[20];
+    sprintf(nome, "user%d.txt", linha_usuario);
+    FILE *fp = fopen (nome, "w");
+
+    if (fp == NULL) {
+        printf("erro ao abrir o arquivo para escrita (sobrescrever dados).\n");
+        return;}
+    fprintf(fp, "%ld\n", cpf);
+    fprintf(fp, "%d\n", senha);
+    for (int k = 0; k < 4; k++)
+        fprintf(fp, "%.6f\n", moedas[k]);
+    fclose(fp);
+}
+
 void depositar_fundos(int linha_usuario){
     long cpf;
     int senha;
@@ -119,8 +136,7 @@ void depositar_fundos(int linha_usuario){
             printf("Digite um valor valido. Caso deseje cancelar o deposito, digite 0.\n");
         else if (valor_deposito == 0){
             printf("Deposito cancelado.\n");
-            return;
-            break;}
+            return;}
         else{
             printf("R$ %.2f adicionado a conta.\n", valor_deposito);
             break;}
@@ -128,19 +144,7 @@ void depositar_fundos(int linha_usuario){
 
     moedas[0] += valor_deposito;
 
-    //sobrescrever todos os dados mudando o saldo atual
-    char nome[20];
-    sprintf(nome, "user%d.txt", linha_usuario);
-    FILE *fp = fopen (nome, "w");
-
-    if (fp == NULL) {
-        printf("erro ao abrir o arquivo para escrita (sobrescrever dados).\n");
-        return;}
-    fprintf(fp, "%ld\n", cpf);
-    fprintf(fp, "%d\n", senha);
-    for (int k = 0; k < 4; k++)
-        fprintf(fp, "%.6f\n", moedas[k]);
-    fclose(fp);
+    sobrescrever_dados(linha_usuario, cpf, senha, moedas);
 
     char operacao = '+'; //chamar funcao de extrato
     char tipo[4] = " R$";
@@ -176,7 +180,7 @@ void consultar_extrato(int linha_usuario){
 
 }
 
-void sacar_fundos(linha_usuario){
+void sacar_fundos(int linha_usuario){
     long cpf;
     int senha;
     float moedas[4] = {0.0f};
@@ -202,24 +206,193 @@ void sacar_fundos(linha_usuario){
 
     moedas[0] -= valor_saque;
 
-    char nome[20]; //sobrescrever todos os dados mudando o saldo atual
-    sprintf(nome, "user%d.txt", linha_usuario);
-    FILE *fp = fopen (nome, "w");
-
-    if (fp == NULL) {
-        printf("erro ao abrir o arquivo para escrita (sobrescrever dados).\n");
-        return;}
-    fprintf(fp, "%ld\n", cpf);
-    fprintf(fp, "%d\n", senha);
-    for (int k = 0; k < 4; k++)
-        fprintf(fp, "%.6f\n", moedas[k]);
-    fclose(fp);
+    sobrescrever_dados(linha_usuario, cpf, senha, moedas);
 
     char operacao = '-'; //chamar funcao de extrato
     char tipo[4] = " R$";
     float taxa = 0.0;
     float cotacao = 0.0;
     adicionar_linha_extrato(linha_usuario, operacao, valor_saque, tipo, cotacao, taxa, moedas);
+}
+
+void apagar_criptomoedas(){
+    FILE *fp = fopen("cotacao_criptomoedas.txt", "w");
+    if (fp == NULL){
+        printf("erro ao abrir o arquivo 'cotacao_criptomoedas.txt'");
+        return;}
+    fclose(fp);
+}
+
+void atualizar_criptomoedas(float valor_base){
+    FILE *fp = fopen("cotacao_criptomoedas.txt", "a");
+    if (fp == NULL){
+        printf("erro ao abrir o arquivo 'cotacao_criptomoedas.txt'");
+        return;}
+
+    int subtracao_adicao = (rand() % 2); // random entre 0 e 1. se 0 = subtrai 0-5% ao valor base. se 1, adiciona
+    float percentual = (rand() % 6) / 100.0; // valor entre 0 e 5%:
+
+    if(subtracao_adicao == 0)
+        valor_base -= valor_base * percentual;
+    else
+        valor_base += valor_base * percentual;
+    
+    fprintf(fp, "%.2f\n", valor_base);
+
+    fclose(fp);
+}
+
+void printar_criptomoedas(float *cotacoes){
+    FILE *fp = fopen("cotacao_criptomoedas.txt", "r");
+    if (fp == NULL){
+        printf("erro ao abrir o arquivo 'cotacao_criptomoedas.txt'");
+        return;}
+
+    // float btc, eth, xrp;
+    // float *cotacoes[] = {&btc, &eth, &xrp};
+    char *nomes[] = {"Bitcoin", "Ethereum", "Ripple"};
+
+    int qtde_criptomoedas = 3;
+    for (int i = 0; i < qtde_criptomoedas; i++){
+        fscanf(fp, "%f", &cotacoes[i]);
+    }
+    printf("Cotacao atualizada:\n");
+    for (int j = 0; j < qtde_criptomoedas; j++)
+        printf("%s: %.2f\n", nomes[j], cotacoes[j]);
+
+    fclose(fp);
+}
+
+void comprar_criptomoedas(int linha_usuario){
+    long cpf;
+    int senha;
+    float moedas[4] = {0.0f};
+    consultar_saldo(linha_usuario, &cpf, &senha, moedas); //usando a função consultar_saldo pra pegar o saldo atual
+
+    int qtde_criptomoedas = 3;
+    char *nomes[] = {"Bitcoin", "Ethereum", "Ripple"};
+    char *siglas[] = {"BTC", "ETH", "XRP"};
+    float taxa_compra[4] = {2, 1, 1};
+    int escolha;
+
+    while(1){
+        for(int i = 0; i < qtde_criptomoedas; i++)
+            printf("%d. %s\n", i+1, nomes[i]);
+        printf("Escolha a criptomoeda desejada: ");
+        scanf("%d", &escolha);
+        if (escolha >= 1 && escolha <= qtde_criptomoedas){
+            printf("%s escolhida.\n", nomes[escolha-1]);
+            printf("Taxa de compra: %.0f%%\n", taxa_compra[escolha-1]);
+            break;}
+        else{
+            printf("Insira um valor valido.");
+            continue;}
+    }
+
+    float cotacoes[3] = {0.0f};
+    printar_criptomoedas(cotacoes); //usando a função pra pegar cotacoes atuais
+
+    float valor_compra;
+    while(1){
+        printf("Digite o valor da compra em reais: ");
+        scanf("%f", &valor_compra);
+        if (valor_compra > moedas[0]-moedas[0]*taxa_compra[escolha-1]/100){
+            printf("O saldo em reais nao pode ficar negativo.\nInsira um valor ate %.2f (taxa de compra: %.0f%%)\n", moedas[0]-moedas[0]*taxa_compra[escolha-1]/100, taxa_compra[escolha-1]);
+            continue;}
+        else if (valor_compra == 0){
+            printf("Compra cancelada.\n");
+            return;
+        }
+    int digito;
+    float saldo_convertido_em_cripto; // valor de compra convertido em cripto
+    saldo_convertido_em_cripto = (valor_compra - (valor_compra*(taxa_compra[escolha-1]/100))) / cotacoes[escolha-1];
+
+    printf("R$ %.2f equivale a %.6f %s. Deseja confirmar a compra?\n1. Confirmar | 0. Cancelar a compra: ", valor_compra, saldo_convertido_em_cripto, siglas[escolha-1]);
+    scanf("%d", &digito);
+    if (digito == 1) {
+        printf("Compra confirmada.\n");
+        moedas[escolha] += saldo_convertido_em_cripto;
+        break;
+    } else if (digito == 0) {
+        printf("Compra cancelada.\n");
+        return;
+    }else {
+        printf("Insira um digito valido.\n");
+        continue;}
+    }
+
+    moedas[0] -= moedas[0]*taxa_compra[escolha-1]/100;
+    moedas[0] -= valor_compra;
+    sobrescrever_dados(linha_usuario, cpf, senha, moedas);
+
+    char operacao = '+'; //chamar funcao de extrato
+    adicionar_linha_extrato(linha_usuario, operacao, valor_compra, siglas[escolha-1], cotacoes[escolha-1], taxa_compra[escolha-1], moedas);
+}
+
+void venda_criptomoedas(int linha_usuario){
+    long cpf;
+    int senha;
+    float moedas[4] = {0.0f};
+    consultar_saldo(linha_usuario, &cpf, &senha, moedas); //usando a função consultar_saldo pra pegar o saldo atual
+
+    int qtde_criptomoedas = 3;
+    char *nomes[] = {"Bitcoin", "Ethereum", "Ripple"};
+    char *siglas[] = {"BTC", "ETH", "XRP"};
+    float taxa_venda[4] = {3, 2, 1};
+    int escolha;
+
+    while(1){
+        for(int i = 0; i < qtde_criptomoedas; i++)
+            printf("%d. %s\n", i+1, nomes[i]);
+        printf("Escolha a criptomoeda desejada: ");
+        scanf("%d", &escolha);
+        if (escolha >= 1 && escolha <= qtde_criptomoedas){
+            printf("%s escolhida.\n", nomes[escolha-1]);
+            printf("Taxa de venda: %.0f%%\n", taxa_venda[escolha-1]);
+            break;}
+        else{
+            printf("Insira um valor valido.");
+            continue;}
+    }
+
+    float cotacoes[3] = {0.0f};
+    printar_criptomoedas(cotacoes); //usando a função pra pegar cotacoes atuais
+
+    float valor_venda;
+    while(1){
+        printf("Digite o valor da venda em reais: ");
+        scanf("%f", &valor_venda);
+        if (valor_venda < moedas[0]-moedas[0]*taxa_venda[escolha-1]/100){
+            printf("O saldo em reais nao pode ficar negativo.\nInsira um valor ate %.2f (taxa de venda: %.0f%%)\n", moedas[0]-moedas[0]*taxa_venda[escolha-1]/100, taxa_venda[escolha-1]);
+            continue;}
+        else if (valor_venda == 0){
+            printf("Compra cancelada.\n");
+            return;
+        }
+    int digito;
+    float saldo_convertido_em_cripto; // valor de venda convertido em cripto
+    saldo_convertido_em_cripto = (valor_venda - (valor_venda*(taxa_venda[escolha-1]/100))) / cotacoes[escolha-1];
+
+    printf("R$ %.2f equivale a %.6f %s. Deseja confirmar a venda?\n1. Confirmar | 0. Cancelar a venda: ", valor_venda, saldo_convertido_em_cripto, siglas[escolha-1]);
+    scanf("%d", &digito);
+    if (digito == 1) {
+        printf("Venda confirmada.\n");
+        moedas[escolha] += saldo_convertido_em_cripto;
+        break;
+    } else if (digito == 0) {
+        printf("Venda cancelada.\n");
+        return;
+    }else {
+        printf("Insira um digito valido.\n");
+        continue;}
+    }
+
+    moedas[0] += moedas[0]*taxa_venda[escolha-1]/100;
+    moedas[0] += valor_venda;
+    sobrescrever_dados(linha_usuario, cpf, senha, moedas);
+
+    char operacao = '-'; //chamar funcao de extrato
+    adicionar_linha_extrato(linha_usuario, operacao, valor_venda, siglas[escolha-1], cotacoes[escolha-1], taxa_venda[escolha-1], moedas);
 }
 
 int main(void){
@@ -255,10 +428,10 @@ int main(void){
     }
 
     menu(); //printa o menu
-    float saldo_atual, btc, eth, xrp;
-    float *moedas[4] = {&saldo_atual, &btc, &eth, &xrp};
+    float moedas[4] = {0.0f};
     long cpf;
     int senha;
+    int senha_novamente;
 
     int i = 1;
     while(i >= 1 && i <= 8) { //switch responsavel por controlar o codigo inteiro (apos login)
@@ -281,7 +454,6 @@ int main(void){
             case 4:
                 printf("\n4. Sacar fundos:\n");
 
-                int senha_novamente;
                 while(1){
                 printf("Insira sua senha novamente: ");
                 scanf("%d", &senha_novamente);
@@ -296,12 +468,11 @@ int main(void){
             case 5:
                 printf("\n5. Compra de criptomoedas\n");
 
-                int senha_novamente;
                 while(1){
                 printf("Insira sua senha novamente: ");
                 scanf("%d", &senha_novamente);
                 if (conferir_senha(senha_novamente, linha_usuario)){
-                    // sacar_fundos(linha_usuario);
+                    comprar_criptomoedas(linha_usuario);
                     break;}
                 else{
                     printf("Senha incorreta!\n");}
@@ -311,12 +482,11 @@ int main(void){
             case 6:
                 printf("\n6. Venda de criptomoedas\n");
 
-                int senha_novamente;
                 while(1){
                 printf("Insira sua senha novamente: ");
                 scanf("%d", &senha_novamente);
                 if (conferir_senha(senha_novamente, linha_usuario)){
-                    // sacar_fundos(linha_usuario);
+                    venda_criptomoedas(linha_usuario);
                     break;}
                 else{
                     printf("Senha incorreta!\n");}
@@ -325,22 +495,12 @@ int main(void){
                 break;
             case 7:
                 printf("\n7. Atualizar cotacao de criptomoedas\n");
-                // float btc, eth, xrp;
-                // int selecao = 0;
-                // criar_arquivo_cotacao("cotacao_criptomoedas.txt");
-                // ler_arquivo_cotacao("cotacao_criptomoedas.txt", &btc, &eth, &xrp);
-                // while (1) {
-                //     printf("Selecione 1 para atualizar a cotacao ou 0 para sair: ");
-                //     scanf("%d", &selecao);
-                    
-                //     if (selecao == 1) {
-                //         atualizar_moeda("cotacao_criptomoedas.txt", &btc, &eth, &xrp);
-                //         ler_arquivo_cotacao("cotacao_criptomoedas.txt", &btc, &eth, &xrp);
-                //     } else if (selecao == 0)
-                //         break;
-                //     else 
-                //         printf("Insira um digito valido.\n");
-                // }
+                apagar_criptomoedas();
+                atualizar_criptomoedas(352980.21f);
+                atualizar_criptomoedas(14250.63f);
+                atualizar_criptomoedas(3.81f);
+                float cotacoes[3] = {0.0f};
+                printar_criptomoedas(cotacoes);
                 break;
             case 8:
                 menu();
@@ -348,6 +508,6 @@ int main(void){
             default: //0 ou qualquer outro numero diferente de 1 a 8 finaliza o switch
                 printf("Saindo...\n");
                 break;
-        } //fim switch
-    }//fim while
+        }
+    }
 };
