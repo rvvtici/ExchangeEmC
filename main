@@ -296,7 +296,7 @@ void comprar_criptomoedas(int linha_usuario){
     while(1){
         printf("Digite o valor da compra em reais: ");
         scanf("%f", &valor_compra);
-        if (valor_compra > moedas[0]-moedas[0]*taxa_compra[escolha-1]/100){
+        if (valor_compra > moedas[0]-moedas[0] * taxa_compra[escolha-1]/100){
             printf("O saldo em reais nao pode ficar negativo.\nInsira um valor ate %.2f (taxa de compra: %.0f%%)\n", moedas[0]-moedas[0]*taxa_compra[escolha-1]/100, taxa_compra[escolha-1]);
             continue;}
         else if (valor_compra == 0){
@@ -326,7 +326,7 @@ void comprar_criptomoedas(int linha_usuario){
     sobrescrever_dados(linha_usuario, cpf, senha, moedas);
 
     char operacao = '+'; //chamar funcao de extrato
-    adicionar_linha_extrato(linha_usuario, operacao, valor_compra, siglas[escolha-1], cotacoes[escolha-1], taxa_compra[escolha-1], moedas);
+    adicionar_linha_extrato(linha_usuario, operacao, (valor_compra - valor_compra * taxa_compra[escolha-1]/100)/cotacoes[escolha-1], siglas[escolha-1], cotacoes[escolha-1], taxa_compra[escolha-1], moedas);
 }
 
 void venda_criptomoedas(int linha_usuario){
@@ -362,13 +362,20 @@ void venda_criptomoedas(int linha_usuario){
     while(1){
         printf("Digite o valor da venda em reais: ");
         scanf("%f", &valor_venda);
-        if (valor_venda < moedas[0]-moedas[0]*taxa_venda[escolha-1]/100){
-            printf("O saldo em reais nao pode ficar negativo.\nInsira um valor ate %.2f (taxa de venda: %.0f%%)\n", moedas[0]-moedas[0]*taxa_venda[escolha-1]/100, taxa_venda[escolha-1]);
+        printf("moedas[escolha] * cotacoes[escolha-1]: %f\n", moedas[escolha] * cotacoes[escolha-1]);
+        printf("taxa_venda[escolha-1]/100) %f\n", moedas[escolha] * cotacoes[escolha-1] * taxa_venda[escolha-1]/100);
+            //se valor de venda > qtde btc * cotacao btc * taxa venda
+        if (valor_venda > moedas[escolha] * cotacoes[escolha-1] - moedas[escolha] * cotacoes[escolha-1] * taxa_venda[escolha-1]/100){
+        // if (valor_venda < moedas[0]-moedas[0]*taxa_venda[escolha-1]/100){
+            printf("O saldo em criptomoedas nao pode ficar negativo.\nInsira um valor ate %.2f (taxa de venda: %.0f%%)\n", moedas[escolha] * cotacoes[escolha-1] - moedas[escolha] * cotacoes[escolha-1] * taxa_venda[escolha-1]/100, taxa_venda[escolha-1]);
             continue;}
         else if (valor_venda == 0){
             printf("Compra cancelada.\n");
             return;
         }
+        else if (valor_venda < 0){
+            printf("O valor de venda nao pode ser negativo. Insira um valor valido.");
+            continue;}
     int digito;
     float saldo_convertido_em_cripto; // valor de venda convertido em cripto
     saldo_convertido_em_cripto = (valor_venda - (valor_venda*(taxa_venda[escolha-1]/100))) / cotacoes[escolha-1];
@@ -377,7 +384,7 @@ void venda_criptomoedas(int linha_usuario){
     scanf("%d", &digito);
     if (digito == 1) {
         printf("Venda confirmada.\n");
-        moedas[escolha] += saldo_convertido_em_cripto;
+        moedas[escolha] -= saldo_convertido_em_cripto;
         break;
     } else if (digito == 0) {
         printf("Venda cancelada.\n");
@@ -387,12 +394,12 @@ void venda_criptomoedas(int linha_usuario){
         continue;}
     }
 
-    moedas[0] += moedas[0]*taxa_venda[escolha-1]/100;
-    moedas[0] += valor_venda;
+    moedas[0] += valor_venda - valor_venda * taxa_venda[escolha-1]/100;
+
     sobrescrever_dados(linha_usuario, cpf, senha, moedas);
 
     char operacao = '-'; //chamar funcao de extrato
-    adicionar_linha_extrato(linha_usuario, operacao, valor_venda, siglas[escolha-1], cotacoes[escolha-1], taxa_venda[escolha-1], moedas);
+    adicionar_linha_extrato(linha_usuario, operacao, (valor_venda - valor_venda * taxa_venda[escolha-1]/100)/cotacoes[escolha-1], siglas[escolha-1], cotacoes[escolha-1], taxa_venda[escolha-1], moedas);
 }
 
 int main(void){
