@@ -416,8 +416,8 @@ int main(void){
         if (conferirCPF(cpf_login, &linha_usuario)) // ponteiro dentro de uma função (conferirCPF) permite que
             break;                                  // a variável dentro de outra função (main) seja modificada
         else{
-            printf("Insira um CPF valido.\n");}
-            continue;
+            printf("Insira um CPF valido.\n");
+            continue;}
     }
 
     while(1){ //senha valida
