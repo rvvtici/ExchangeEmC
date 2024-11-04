@@ -45,7 +45,8 @@ int MENU(){
 
 int Novo_investidor(){//FUNCAO PARA INCLUIR NOVO INVESTIDOR
   int SENHA_N_INVEST;
-  char NOME[MAX_NOME], CPF_N_INVEST[MAX_CPF];;
+  char NOME[MAX_NOME], CPF_N_INVEST[MAX_CPF];
+  printf(" ");
   printf("--------------------CADASTRO DO NOVO INVESTIDOR--------------------\n");
 
     printf("NOME DO INVESTIDOR: ");
@@ -75,9 +76,33 @@ int Novo_investidor(){//FUNCAO PARA INCLUIR NOVO INVESTIDOR
     return 0;
 }
 
+int Excluir_Investidor(struct ADM adm){
+  char CPF_INVESTIDOR[12];
+  int SENHA_CONF;
+  
+  printf(" ");
+  printf("--------------------EXCLUIR INVESTIDOR--------------------\n");
+  printf("Qual é o CPF do investidor: ");
+  scanf("%s", CPF_INVESTIDOR);
+  
+  //FAZER A LOGICA DA PESQUISA DO CPF E APRESENTAR OS DADOS DAQUELE ARQUIVO DO INVESTIDOR
+  
+  printf("Confirme a exclusao com a senha do administrador: ");
+  scanf("%d", &SENHA_CONF);
+  
+  while (SENHA_CONF != adm.SENHA_ADM) { // Compara senha
+    printf("Senha incorreta! Tente novamente\n");
+    printf("SENHA: ");
+    scanf("%d", &SENHA_CONF); 
+  }
+  
+  printf("Investidor excluido com sucesso!\n");
+}
+
 int Cadastro_Cript(){
   float tax_C, tax_V, Cot_In;
   char NOME[MAX_NOME];
+  printf(" ");
   printf("--------------------CADASTRO CRIPTOMOEDA--------------------\n");
   
   printf("Nome da Moeda: ");
@@ -110,7 +135,7 @@ int main(void) {
       Novo_investidor();
       break;
     case 2:
-      printf("opção 2\n");
+      Excluir_Investidor(adm);
       break;
     case 3:
       Cadastro_Cript();
