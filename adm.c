@@ -75,6 +75,26 @@ int Novo_investidor(){//FUNCAO PARA INCLUIR NOVO INVESTIDOR
     return 0;
 }
 
+int Cadastro_Cript(){
+  float tax_C, tax_V, Cot_In;
+  char NOME[MAX_NOME];
+  printf("--------------------CADASTRO CRIPTOMOEDA--------------------\n");
+  
+  printf("Nome da Moeda: ");
+  scanf("%s", NOME);
+
+  printf("Cotação inicial: ");
+  scanf("%f", &Cot_In);
+
+  printf("Taxa de compra(%%): ");
+  scanf("%f", &tax_C);
+
+  printf("Taxa de venda(%%): ");
+  scanf("%f", &tax_V);
+
+  printf("Moeda Cadastrada com Sucesso!\n");
+}
+
 int main(void) {
   struct ADM adm; 
   int opcao;
@@ -93,7 +113,7 @@ int main(void) {
       printf("opção 2\n");
       break;
     case 3:
-      printf("opção 3\n");
+      Cadastro_Cript();
       break;
     case 4:
       printf("opção 4\n");
