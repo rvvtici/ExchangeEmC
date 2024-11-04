@@ -1,5 +1,7 @@
 #include <stdio.h>
 #include <string.h>
+#define MAX_CPF 12
+#define MAX_NOME 200
 
 struct ADM {
     char CPF_ADM[12];
@@ -43,31 +45,49 @@ int MENU(){
 
 int Novo_investidor(){//FUNCAO PARA INCLUIR NOVO INVESTIDOR
   int SENHA_N_INVEST;
-  char NOME, CPF_N_INVEST;
-  printf("--------------------CADASTRO DO NOVO INVESTIDOR--------------------");
-  printf("NOME DO INVESTIDOR:");
-  scanf("%s", &NOME);
-  printf("CPF DO INVESTIDOR:");
-  scanf("%s", &CPF_N_INVEST);
-  printf("SENHA DO INVESTIDOR:");
-  scanf("%d", &SENHA_N_INVEST);
-  while(CPF_N_INVEST !=  || SENHA_N_INVEST){};
+  char NOME[MAX_NOME], CPF_N_INVEST[MAX_CPF];;
+  printf("--------------------CADASTRO DO NOVO INVESTIDOR--------------------\n");
 
-};
+    printf("NOME DO INVESTIDOR: ");
+    scanf("%s", NOME);  
+
+    printf("CPF DO INVESTIDOR: ");
+    scanf("%s", CPF_N_INVEST);  
+
+    printf("SENHA DO INVESTIDOR: ");
+    scanf("%d", &SENHA_N_INVEST);  
+
+    // Validação de CPF e senha
+    while (strlen(CPF_N_INVEST) != 11 || SENHA_N_INVEST < 100000 || SENHA_N_INVEST > 999999) {
+        printf("CPF ou SENHA incorretos! Tente novamente!\n");
+
+        printf("NOME DO INVESTIDOR: ");
+        scanf("%s", NOME);
+
+        printf("CPF DO INVESTIDOR: ");
+        scanf("%s", CPF_N_INVEST);
+
+        printf("SENHA DO INVESTIDOR: ");
+        scanf("%d", &SENHA_N_INVEST);
+    }
+    
+    printf("Cadastro Efetuado!\n");
+    return 0;
+}
 
 int main(void) {
   struct ADM adm; 
   int opcao;
 
-  strcpy(adm.CPF_ADM, "12345678910"); // CPF ADM
-  adm.SENHA_ADM = 123456; // SENHA ADM
+  strcpy(adm.CPF_ADM, "1"); // CPF ADM
+  adm.SENHA_ADM = 12; // SENHA ADM
   login_ADM(adm);
   MENU();
   printf("Opçao: ");
   scanf("%d", &opcao);
   switch(opcao){
     case 1:
-      printf("opção 1\n");
+      Novo_investidor();
       break;
     case 2:
       printf("opção 2\n");
