@@ -162,6 +162,24 @@ int Consultar_Saldo(){
   return 0;
 }
 
+int Consultar_Extrato(){
+  char CPF_INVESTIDOR[12];
+
+  printf(" ");
+  printf("--------------------CONSULTAR EXTRATO--------------------\n");
+  printf("CPF do investidor para consulta: ");
+  scanf("%s", CPF_INVESTIDOR);
+
+  // while(CPF_INVESTIDOR != CPF NO ARQUIVO){
+  //   printf("CPF INVALIDO TENTE NOVAMENTE!");
+  //   printf("CPF do investidor para consulta: ");
+  //   scanf("%s", CPF_INVESTIDOR);
+  // }if(CPF_INVESTIDOR == CPF ARQUIVO){
+  //   printf("ARQUIVOOOO");
+
+  // }
+  return 0;
+}
 
 
 int main(void) {
