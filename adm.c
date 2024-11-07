@@ -41,6 +41,7 @@ int MENU(){
   printf("5.Consultar saldo de um investidor\n");
   printf("6.Consultar extrado de um investidor\n");
   printf("7.Atualizar cotação de criptomoedas\n");
+  return 0;
 };
 
 int Novo_investidor(){//FUNCAO PARA INCLUIR NOVO INVESTIDOR
@@ -97,6 +98,7 @@ int Excluir_Investidor(struct ADM adm){
   }
   
   printf("Investidor excluido com sucesso!\n");
+  return 0;
 }
 
 int Cadastro_Cript(){
@@ -118,7 +120,7 @@ int Cadastro_Cript(){
   scanf("%f", &tax_V);
 
   printf("Moeda Cadastrada com Sucesso!\n");
-
+  return 0;
 }
 
 int Excluir_Cript(struct ADM adm){
@@ -126,7 +128,7 @@ int Excluir_Cript(struct ADM adm){
   int SENHA_CONF;
 
   printf(" ");
-  printf("--------------------CADASTRO CRIPTOMOEDA--------------------\n");
+  printf("--------------------EXCLUIR CRIPTOMOEDA--------------------\n");
   printf("Qual sera a Criptomoeda de exclusao?: ");
   scanf("%s", &MOEDA);
   //PEGAR O ARQUIVO QUE É DA CRIPTOMOEDA REFERENCE E PRINTAR
@@ -138,7 +140,28 @@ int Excluir_Cript(struct ADM adm){
     printf("Digite a senha para a confirmacao: ");
     scanf("%d", &SENHA_CONF); 
   }
+  return 0;
 }
+
+int Consultar_Saldo(){
+  char CPF_INVESTIDOR[12];
+
+  printf(" ");
+  printf("--------------------CONCULTAR SALDO--------------------\n");
+  printf("CPF do investidor para consulta: ");
+  scanf("%s", CPF_INVESTIDOR);
+
+  // while(CPF_INVESTIDOR != CPF NO ARQUIVO){
+  //   printf("CPF INVALIDO TENTE NOVAMENTE!");
+  //   printf("CPF do investidor para consulta: ");
+  //   scanf("%s", CPF_INVESTIDOR);
+  // }if(CPF_INVESTIDOR == CPF ARQUIVO){
+  //   printf("ARQUIVOOOO");
+
+  // }
+  return 0;
+}
+
 
 
 int main(void) {
@@ -168,7 +191,7 @@ int main(void) {
       Excluir_Cript(adm);
       break;
     case 5:
-      printf("opção 5\n");
+      Consultar_Saldo();
       break;
     case 6:
       printf("opção 6\n");
