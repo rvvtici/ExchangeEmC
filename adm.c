@@ -125,7 +125,7 @@ int Cadastro_Cript(){
 
 int Excluir_Cript(struct ADM adm){
   char MOEDA;
-  int SENHA_CONF;
+  int SENHA_CONFI;
 
   printf(" ");
   printf("--------------------EXCLUIR CRIPTOMOEDA--------------------\n");
@@ -133,12 +133,12 @@ int Excluir_Cript(struct ADM adm){
   scanf("%s", &MOEDA);
   //PEGAR O ARQUIVO QUE É DA CRIPTOMOEDA REFERENCE E PRINTAR
   printf("Digite a senha para a confirmacao: ");
-  scanf("%d", &SENHA_CONF);
+  scanf("%d", &SENHA_CONFI);
 
-  while (SENHA_CONF != adm.SENHA_ADM) { // Compara senha
+  while (SENHA_CONFI != adm.SENHA_ADM) { // Compara senha
     printf("Senha incorreta! Tente novamente\n");
     printf("Digite a senha para a confirmacao: ");
-    scanf("%d", &SENHA_CONF); 
+    scanf("%d", &SENHA_CONFI); 
   }
   return 0;
 }
@@ -181,6 +181,12 @@ int Consultar_Extrato(){
   return 0;
 }
 
+int Atualizar_Cripto(){
+  printf("ATUALIZANDO A MOEDA KCT");
+  return 0;
+}
+
+
 
 int main(void) {
   struct ADM adm; 
@@ -212,10 +218,10 @@ int main(void) {
       Consultar_Saldo();
       break;
     case 6:
-      printf("opção 6\n");
+      Consultar_Extrato();
       break;
     case 7:
-      printf("opção 7\n");
+      Atualizar_Cripto();
       break;
     default:
       printf("opcao invalida\n");
