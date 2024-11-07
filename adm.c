@@ -118,7 +118,28 @@ int Cadastro_Cript(){
   scanf("%f", &tax_V);
 
   printf("Moeda Cadastrada com Sucesso!\n");
+
 }
+
+int Excluir_Cript(struct ADM adm){
+  char MOEDA;
+  int SENHA_CONF;
+
+  printf(" ");
+  printf("--------------------CADASTRO CRIPTOMOEDA--------------------\n");
+  printf("Qual sera a Criptomoeda de exclusao?: ");
+  scanf("%s", &MOEDA);
+  //PEGAR O ARQUIVO QUE É DA CRIPTOMOEDA REFERENCE E PRINTAR
+  printf("Digite a senha para a confirmacao: ");
+  scanf("%d", &SENHA_CONF);
+
+  while (SENHA_CONF != adm.SENHA_ADM) { // Compara senha
+    printf("Senha incorreta! Tente novamente\n");
+    printf("Digite a senha para a confirmacao: ");
+    scanf("%d", &SENHA_CONF); 
+  }
+}
+
 
 int main(void) {
   struct ADM adm; 
@@ -127,9 +148,12 @@ int main(void) {
   strcpy(adm.CPF_ADM, "1"); // CPF ADM
   adm.SENHA_ADM = 12; // SENHA ADM
   login_ADM(adm);
+
   MENU();
+
   printf("Opçao: ");
   scanf("%d", &opcao);
+
   switch(opcao){
     case 1:
       Novo_investidor();
@@ -141,7 +165,7 @@ int main(void) {
       Cadastro_Cript();
       break;
     case 4:
-      printf("opção 4\n");
+      Excluir_Cript(adm);
       break;
     case 5:
       printf("opção 5\n");
