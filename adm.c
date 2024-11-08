@@ -32,7 +32,7 @@ int login_ADM(struct ADM adm) {
 };
 
 int MENU(){
-  printf(" ");
+  printf("");
   printf("--------------------BEM_VINDO AO MENU--------------------\n");
   printf("1.Cadastro de novo investidor\n");
   printf("2.Excluir investidor\n");
@@ -41,6 +41,8 @@ int MENU(){
   printf("5.Consultar saldo de um investidor\n");
   printf("6.Consultar extrado de um investidor\n");
   printf("7.Atualizar cotação de criptomoedas\n");
+  printf("8.Sair\n");
+  printf("");
   return 0;
 };
 
@@ -186,8 +188,6 @@ int Atualizar_Cripto(){
   return 0;
 }
 
-
-
 int main(void) {
   struct ADM adm; 
   int opcao;
@@ -195,38 +195,43 @@ int main(void) {
   strcpy(adm.CPF_ADM, "1"); // CPF ADM
   adm.SENHA_ADM = 12; // SENHA ADM
   login_ADM(adm);
+  
+  do{
+    MENU();
 
-  MENU();
+    printf("Opçao: ");
+    scanf("%d", &opcao);
 
-  printf("Opçao: ");
-  scanf("%d", &opcao);
-
-  switch(opcao){
-    case 1:
-      Novo_investidor();
-      break;
-    case 2:
-      Excluir_Investidor(adm);
-      break;
-    case 3:
-      Cadastro_Cript();
-      break;
-    case 4:
-      Excluir_Cript(adm);
-      break;
-    case 5:
-      Consultar_Saldo();
-      break;
-    case 6:
-      Consultar_Extrato();
-      break;
-    case 7:
-      Atualizar_Cripto();
-      break;
-    default:
-      printf("opcao invalida\n");
-      break;
-    }
+    switch(opcao){
+      case 1:
+        Novo_investidor();
+        break;
+      case 2:
+        Excluir_Investidor(adm);
+        break;
+      case 3:
+        Cadastro_Cript();
+        break;
+      case 4:
+        Excluir_Cript(adm);
+        break;
+      case 5:
+        Consultar_Saldo();
+        break;
+      case 6:
+        Consultar_Extrato();
+        break;
+      case 7:
+        Atualizar_Cripto();
+        break;
+      case 8:
+        printf("Você saiu do sistema. Até logo!\n");
+        break;
+      default:
+        printf("opcao invalida\n");
+        break;
+      }
+    } while (opcao != 8);
   return 0;
 
 }
