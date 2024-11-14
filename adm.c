@@ -32,7 +32,7 @@ int login_ADM(struct ADM adm) {
 };
 
 int MENU(){
-  printf("");
+  printf(" ");
   printf("--------------------BEM_VINDO AO MENU--------------------\n");
   printf("1.Cadastro de novo investidor\n");
   printf("2.Excluir investidor\n");
@@ -42,13 +42,13 @@ int MENU(){
   printf("6.Consultar extrado de um investidor\n");
   printf("7.Atualizar cotação de criptomoedas\n");
   printf("8.Sair\n");
-  printf("");
+  printf(" ");
   return 0;
 };
 
 int Novo_investidor(){//FUNCAO PARA INCLUIR NOVO INVESTIDOR
   int SENHA_N_INVEST;
-  char NOME[MAX_NOME], CPF_N_INVEST[MAX_CPF];
+  char NOME[MAX_NOME], CPF_N_INVEST[MAX_CPF], NOME_ARQ[50];
   printf(" ");
   printf("--------------------CADASTRO DO NOVO INVESTIDOR--------------------\n");
 
@@ -74,6 +74,28 @@ int Novo_investidor(){//FUNCAO PARA INCLUIR NOVO INVESTIDOR
         printf("SENHA DO INVESTIDOR: ");
         scanf("%d", &SENHA_N_INVEST);
     }
+        
+    FILE *arquivo = fopen("usuarios.txt", "a");// SALVANDO NO ARQUIVO DE USUARIOS
+
+    if (arquivo == NULL) {
+        printf("Erro ao abrir o arquivo para cadastro!\n");
+        return -1;
+    }
+    fprintf(arquivo, "%s\n", CPF_N_INVEST);
+    fclose(arquivo);
+    
+    snprintf(NOME_ARQ, sizeof(NOME_ARQ), "%s.txt", CPF_N_INVEST);//CRIANDO ARQUIVO DO INVESTIDOR
+
+    FILE *arquivo_investidor  = fopen(NOME_ARQ, "w");
+    if (arquivo_investidor  == NULL) {
+        printf("Erro ao criar o arquivo para o investidor!\n");
+        return -1;
+    }
+    //ESCREVENDO AS INFORMAÇOES NOS ARQUIVOS
+    fprintf(arquivo_investidor, NOME);
+    fprintf(arquivo_investidor, CPF_N_INVEST);
+    fprintf(arquivo_investidor, SENHA_N_INVEST);
+    fclose(arquivo_investidor);
     
     printf("Cadastro Efetuado!\n");
     return 0;
@@ -88,8 +110,6 @@ int Excluir_Investidor(struct ADM adm){
   printf("Qual é o CPF do investidor: ");
   scanf("%s", CPF_INVESTIDOR);
   
-  //FAZER A LOGICA DA PESQUISA DO CPF E APRESENTAR OS DADOS DAQUELE ARQUIVO DO INVESTIDOR
-  
   printf("Confirme a exclusao com a senha do administrador: ");
   scanf("%d", &SENHA_CONF);
   
@@ -97,6 +117,15 @@ int Excluir_Investidor(struct ADM adm){
     printf("Senha incorreta! Tente novamente\n");
     printf("SENHA: ");
     scanf("%d", &SENHA_CONF); 
+  }
+  char nome_arquivo[50];
+  snprintf(nome_arquivo, sizeof(nome_arquivo), "%s.txt", CPF_INVESTIDOR);
+
+  if (remove(nome_arquivo) == 0) {
+      printf("Arquivo do investidor excluído com sucesso!\n");
+  } else {
+      printf("Erro ao excluir o arquivo do investidor. Verifique se o CPF está correto.\n");
+      return -1;
   }
   
   printf("Investidor excluido com sucesso!\n");
