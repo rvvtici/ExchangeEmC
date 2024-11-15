@@ -258,14 +258,13 @@ int Consultar_Extrato(){
 }
 
 int Atualizar_Cripto(){
-  printf("ATUALIZANDO A MOEDA KCT");
+  
   return 0;
 }
 
 int main(void) {
   struct ADM adm; 
   int opcao;
-
   strcpy(adm.CPF_ADM, "1"); // CPF ADM
   adm.SENHA_ADM = 12; // SENHA ADM
   login_ADM(adm);
