@@ -31,6 +31,29 @@ int login_ADM(struct ADM adm) {
 
 };
 
+void remover_CPF_do_arquivo(const char *cpf_remover) {//FUNÇÂO PARA REMOVER O USUARIO DO USUARIOS.TXT
+  char cpf_atual[MAX_CPF];
+  FILE *arquivo = fopen("usuarios.txt", "r");
+  FILE *arquivo_temp = fopen("temp.txt", "w");
+
+  if (arquivo == NULL || arquivo_temp == NULL) {
+    printf("Erro ao abrir os arquivos para leitura/escrita.\n");
+    return;
+  }
+  while (fgets(cpf_atual, sizeof(cpf_atual), arquivo) != NULL) {//LE AS LINHAS DO ARQUIVO
+    cpf_atual[strcspn(cpf_atual, "\n")] = 0;//REMOVE A LINHA SE EXISTIR
+
+    if (strcmp(cpf_atual, cpf_remover) != 0) {//ESCRITURA NO ARQUIVO TEMPORARIO
+      fprintf(arquivo_temp, "%s\n", cpf_atual);
+    }
+  }
+  fclose(arquivo);
+  fclose(arquivo_temp);
+
+  remove("usuarios.txt");//EXCLUI O ARQUIVO
+  rename("temp.txt", "usuarios.txt");//RENOMEIA O ARQUIVO TEMPORARIO PARA O USUARIO.TXT
+}
+
 int MENU(){
   printf(" ");
   printf("--------------------BEM_VINDO AO MENU--------------------\n");
@@ -92,9 +115,9 @@ int Novo_investidor(){//FUNCAO PARA INCLUIR NOVO INVESTIDOR
         return -1;
     }
     //ESCREVENDO AS INFORMAÇOES NOS ARQUIVOS
-    fprintf(arquivo_investidor, NOME);
-    fprintf(arquivo_investidor, CPF_N_INVEST);
-    fprintf(arquivo_investidor, SENHA_N_INVEST);
+    fprintf(arquivo_investidor,"%s\n", NOME);
+    fprintf(arquivo_investidor, "%s\n",CPF_N_INVEST);
+    fprintf(arquivo_investidor, "%d\n", SENHA_N_INVEST);
     fclose(arquivo_investidor);
     
     printf("Cadastro Efetuado!\n");
@@ -110,6 +133,8 @@ int Excluir_Investidor(struct ADM adm){
   printf("Qual é o CPF do investidor: ");
   scanf("%s", CPF_INVESTIDOR);
   
+  //FAZER A LOGICA DA PESQUISA DO CPF E APRESENTAR OS DADOS DAQUELE ARQUIVO DO INVESTIDOR
+  
   printf("Confirme a exclusao com a senha do administrador: ");
   scanf("%d", &SENHA_CONF);
   
@@ -122,11 +147,14 @@ int Excluir_Investidor(struct ADM adm){
   snprintf(nome_arquivo, sizeof(nome_arquivo), "%s.txt", CPF_INVESTIDOR);
 
   if (remove(nome_arquivo) == 0) {
-      printf("Arquivo do investidor excluído com sucesso!\n");
+    printf("Arquivo do investidor excluído com sucesso!\n");
   } else {
       printf("Erro ao excluir o arquivo do investidor. Verifique se o CPF está correto.\n");
       return -1;
-  }
+    }
+
+  remover_CPF_do_arquivo(CPF_INVESTIDOR);//REMOVENDO DO USUARIOS.TXT
+  printf("Investidor excluído com sucesso!\n");
   
   printf("Investidor excluido com sucesso!\n");
   return 0;

@@ -1,3 +1,0 @@
-Nome: livia
-CPF: 12345679815
-Senha: 147258
