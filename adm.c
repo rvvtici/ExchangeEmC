@@ -124,7 +124,7 @@ int Novo_investidor(){//FUNCAO PARA INCLUIR NOVO INVESTIDOR
     return 0;
 }
 
-int Excluir_Investidor(struct ADM adm){
+int Excluir_Investidor(struct ADM adm){//FUNÇÂO PARA EXCLUIR QLQR INVESTIDOR
   char CPF_INVESTIDOR[12];
   int SENHA_CONF;
   
@@ -178,18 +178,29 @@ int Cadastro_Cript(){
   printf("Taxa de venda(%%): ");
   scanf("%f", &tax_V);
 
+  FILE *arquivo_Cripto  = fopen(NOME, "w");//CRIANDO ARQUIVO DAS CRIPTOMOEDAS
+  if (arquivo_Cripto  == NULL) {
+      printf("Erro ao criar o arquivo para o investidor!\n");
+      return -1;
+  }
+  //ESCREVENDO AS INFORMAÇOES NOS ARQUIVOS
+  fprintf(arquivo_Cripto,"%f\n", Cot_In);
+  fprintf(arquivo_Cripto, "%f\n", tax_C);
+  fprintf(arquivo_Cripto, "%f\n", tax_V);
+  fclose(arquivo_Cripto);
+    
   printf("Moeda Cadastrada com Sucesso!\n");
   return 0;
 }
 
 int Excluir_Cript(struct ADM adm){
-  char MOEDA;
+  char MOEDA[MAX_NOME];
   int SENHA_CONFI;
 
   printf(" ");
   printf("--------------------EXCLUIR CRIPTOMOEDA--------------------\n");
   printf("Qual sera a Criptomoeda de exclusao?: ");
-  scanf("%s", &MOEDA);
+  scanf("%s", MOEDA);
   //PEGAR O ARQUIVO QUE É DA CRIPTOMOEDA REFERENCE E PRINTAR
   printf("Digite a senha para a confirmacao: ");
   scanf("%d", &SENHA_CONFI);
@@ -199,6 +210,12 @@ int Excluir_Cript(struct ADM adm){
     printf("Digite a senha para a confirmacao: ");
     scanf("%d", &SENHA_CONFI); 
   }
+  if (remove(MOEDA) == 0) {
+    printf("Criptomoeda excluída com sucesso!\n");
+  } else {
+    printf("Erro ao excluir a criptomoeda. Certifique-se de que o arquivo existe.\n");
+  }
+
   return 0;
 }
 
