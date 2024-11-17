@@ -65,7 +65,7 @@ void menu(){
     printf("---------------\n");
 };
 
-void consultar_saldo(int linha_usuario, long *cpf, int *senha, float *moedas){
+void consultar_saldo(int linha_usuario, long *cpf, int *senha, char nome_investidor[], float *moedas){
     char nome[10];
     sprintf(nome, "user%d.txt", linha_usuario);
     FILE *fp = fopen (nome, "r");
@@ -75,6 +75,7 @@ void consultar_saldo(int linha_usuario, long *cpf, int *senha, float *moedas){
 
     fscanf(fp, "%ld", cpf);   // cpf (descartavel, usando apenas pra pular pra próxima linha)
     fscanf(fp, "%d", senha);   // senha (descartavel, igual o cpf)
+    fscanf(fp, "%s", nome_investidor);
     for (int k = 0; k < 4; k++) // saldo: reais, btc, eth, xrp (ficam da 3 a 6 linha)
         fscanf(fp, "%f", &moedas[k]);
 
@@ -107,7 +108,7 @@ void adicionar_linha_extrato(int linha_usuario, char operacao, float valor, char
     fclose(fp);
 }
 
-void sobrescrever_dados(int linha_usuario, long cpf, int senha, float moedas[]){
+void sobrescrever_dados(int linha_usuario, long cpf, int senha, char nome_investidor[], float moedas[]){
     char nome[20];
     sprintf(nome, "user%d.txt", linha_usuario);
     FILE *fp = fopen (nome, "w");
@@ -117,6 +118,7 @@ void sobrescrever_dados(int linha_usuario, long cpf, int senha, float moedas[]){
         return;}
     fprintf(fp, "%ld\n", cpf);
     fprintf(fp, "%d\n", senha);
+    fprintf(fp, "%s\n", nome_investidor);
     for (int k = 0; k < 4; k++)
         fprintf(fp, "%.6f\n", moedas[k]);
     fclose(fp);
@@ -126,7 +128,9 @@ void depositar_fundos(int linha_usuario){
     long cpf;
     int senha;
     float moedas[4] = {0.0f};
-    consultar_saldo(linha_usuario, &cpf, &senha, moedas); //usando a função consultar_saldo pra pegar o saldo atual
+    char nome_investidor[200];
+    consultar_saldo(linha_usuario, &cpf, &senha, nome_investidor, moedas);
+    // consultar_saldo(linha_usuario, &cpf, &senha, moedas); //usando a função consultar_saldo pra pegar o saldo atual
 
     float valor_deposito;
     while(1){
@@ -144,7 +148,7 @@ void depositar_fundos(int linha_usuario){
 
     moedas[0] += valor_deposito;
 
-    sobrescrever_dados(linha_usuario, cpf, senha, moedas);
+    sobrescrever_dados(linha_usuario, cpf, senha, nome_investidor, moedas);
 
     char operacao = '+'; //chamar funcao de extrato
     char tipo[4] = " R$";
@@ -174,7 +178,7 @@ void consultar_extrato(int linha_usuario){
         printf("Extrato vazio.\n");
     else{
         printf("Extrato:\n");
-        for (int j; j < i; j++)
+        for (int j = 0; j < i; j++)
             printf("%s", extrato[j]);
     }
 
@@ -184,8 +188,9 @@ void sacar_fundos(int linha_usuario){
     long cpf;
     int senha;
     float moedas[4] = {0.0f};
-    consultar_saldo(linha_usuario, &cpf, &senha, moedas); //usando a função consultar_saldo pra pegar o saldo atual
-
+    char nome_investidor[200];
+    consultar_saldo(linha_usuario, &cpf, &senha, nome_investidor, moedas);
+    
     float valor_saque;
     while(1){
         printf("Digite o valor do saque em reais: ");
@@ -206,7 +211,7 @@ void sacar_fundos(int linha_usuario){
 
     moedas[0] -= valor_saque;
 
-    sobrescrever_dados(linha_usuario, cpf, senha, moedas);
+    sobrescrever_dados(linha_usuario, cpf, senha, nome_investidor, moedas);
 
     char operacao = '-'; //chamar funcao de extrato
     char tipo[4] = " R$";
@@ -267,8 +272,8 @@ void comprar_criptomoedas(int linha_usuario){
     long cpf;
     int senha;
     float moedas[4] = {0.0f};
-    consultar_saldo(linha_usuario, &cpf, &senha, moedas); //usando a função consultar_saldo pra pegar o saldo atual
-
+    char nome_investidor[200];
+    consultar_saldo(linha_usuario, &cpf, &senha, nome_investidor, moedas);
     int qtde_criptomoedas = 3;
     char *nomes[] = {"Bitcoin", "Ethereum", "Ripple"};
     char *siglas[] = {"BTC", "ETH", "XRP"};
@@ -323,7 +328,8 @@ void comprar_criptomoedas(int linha_usuario){
 
     moedas[0] -= moedas[0]*taxa_compra[escolha-1]/100;
     moedas[0] -= valor_compra;
-    sobrescrever_dados(linha_usuario, cpf, senha, moedas);
+    sobrescrever_dados(linha_usuario, cpf, senha, nome_investidor, moedas);
+
 
     char operacao = '+'; //chamar funcao de extrato
     adicionar_linha_extrato(linha_usuario, operacao, (valor_compra - valor_compra * taxa_compra[escolha-1]/100)/cotacoes[escolha-1], siglas[escolha-1], cotacoes[escolha-1], taxa_compra[escolha-1], moedas);
@@ -333,8 +339,8 @@ void venda_criptomoedas(int linha_usuario){
     long cpf;
     int senha;
     float moedas[4] = {0.0f};
-    consultar_saldo(linha_usuario, &cpf, &senha, moedas); //usando a função consultar_saldo pra pegar o saldo atual
-
+    char nome_investidor[200];
+    consultar_saldo(linha_usuario, &cpf, &senha, nome_investidor, moedas);
     int qtde_criptomoedas = 3;
     char *nomes[] = {"Bitcoin", "Ethereum", "Ripple"};
     char *siglas[] = {"BTC", "ETH", "XRP"};
@@ -396,7 +402,7 @@ void venda_criptomoedas(int linha_usuario){
 
     moedas[0] += valor_venda - valor_venda * taxa_venda[escolha-1]/100;
 
-    sobrescrever_dados(linha_usuario, cpf, senha, moedas);
+    sobrescrever_dados(linha_usuario, cpf, senha, nome_investidor, moedas);
 
     char operacao = '-'; //chamar funcao de extrato
     adicionar_linha_extrato(linha_usuario, operacao, (valor_venda - valor_venda * taxa_venda[escolha-1]/100)/cotacoes[escolha-1], siglas[escolha-1], cotacoes[escolha-1], taxa_venda[escolha-1], moedas);
@@ -436,6 +442,7 @@ int main(void){
 
     menu(); //printa o menu
     float moedas[4] = {0.0f};
+    char nome_investidor[200];
     long cpf;
     int senha;
     int senha_novamente;
@@ -448,7 +455,7 @@ int main(void){
         switch(i) {
             case 1:
                 printf("\n1. Consultar saldo:\n");
-                consultar_saldo(linha_usuario, &cpf, &senha, moedas);
+                consultar_saldo(linha_usuario, &cpf, &senha, nome_investidor, moedas);
                 break;
             case 2:
                 printf("\n2. Consultar extrato:\n");

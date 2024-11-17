@@ -106,6 +106,8 @@ void contar_criptomoedas(int *qtde_linhas){ //contar qtde de criptomoedas
             (*qtde_linhas)++;
     }
 
+    *qtde_linhas = *qtde_linhas/5;
+
     fclose(fp);
 }
 
@@ -122,9 +124,6 @@ void quantidade_investidores(int *quantidade_cpfs){
     while (fscanf(arquivo, "%lld", &cpfs[*quantidade_cpfs]) != EOF && *quantidade_cpfs < maximo_cpfs) {
         (*quantidade_cpfs)++;
     }
-
-    for (int j = 0; j < *quantidade_cpfs; j++)
-        printf("cpf[%d] == %lld\n", j, cpfs[j]);
 
     fclose(arquivo);
 }
@@ -191,7 +190,7 @@ int Novo_investidor(){//FUNCAO PARA INCLUIR NOVO INVESTIDOR
     fprintf(arquivo_investidor,"%s\n", NOME);
     int quantidade_criptomoedas;
     contar_criptomoedas(&quantidade_criptomoedas);    
-    for(int i = 0; i < quantidade_criptomoedas/5; i++) // 3 criptomoedas = 15/5 (5 linhas por cripto no criptomoedas.txt)
+    for(int i = 0; i < quantidade_criptomoedas; i++) // 3 criptomoedas = 15/5 (5 linhas por cripto no criptomoedas.txt)
         fprintf(arquivo_investidor, "0.0\n");
     fclose(arquivo_investidor);
     // printf("quantidade criptomoedas: %d", quantidade_criptomoedas/5);
@@ -293,7 +292,6 @@ void Cadastro_Cript(){
     //adicionando nova linha a todos os usuarios, respectivo a nova moeda adicionada.
     int quantidade_cpfs = 0;
     quantidade_investidores(&quantidade_cpfs);
-    printf("quantidade cpfs: %d", quantidade_cpfs);
 
     for (int i = 0; i < quantidade_cpfs; i++){
         char nome[20];
@@ -305,7 +303,17 @@ void Cadastro_Cript(){
         fprintf(fp, "0\n");
         fclose(fp);  
     }
-   
+
+    //adicionando uma nova linha a cotacoes usando o valor base da nova criptomoeda.
+    FILE *fp2 = fopen("cotacao_criptomoedas.txt", "a");
+
+    if (fp2 == NULL){
+        printf("erro\n");
+        return;
+    }
+
+    fprintf(fp2, "%.2f\n", Cot_In);
+    fclose(fp2);
 }
 
 // int Excluir_Cript(struct ADM adm){
@@ -357,7 +365,7 @@ int buscar_linha_investidor(long long cpf, int *linha_usuario){
     return 0;
 }
 
-void lerdadoscriptomoedas(char sigla[][4], char nome[][20], float *cotacao, float *taxavenda, float *taxacompra){
+void ler_dados_criptomoedas(char sigla[][4], char nome[][20], float *cotacao, float *taxavenda, float *taxacompra){
     FILE *fp = fopen("criptomoedas.txt", "r");
 
     if (fp == NULL){
@@ -388,7 +396,7 @@ void consultar_saldo(long long cpf_investidor, int linha_usuario){
 
     int quantidade_moedas = 0;
     contar_criptomoedas(&quantidade_moedas); // contar qtde criptomoedas
-    quantidade_moedas = quantidade_moedas/5; //5 lihnas por criptomoeda no .txt
+    quantidade_moedas = quantidade_moedas; //5 lihnas por criptomoeda no .txt
 
     float moedas[quantidade_moedas];
     fscanf(fp, "%lld", &cpf);   // cpf (descartavel, usando apenas pra pular pra próxima linha)
@@ -402,7 +410,7 @@ void consultar_saldo(long long cpf_investidor, int linha_usuario){
     float cotacao[4];
     float taxavenda[4];
     float taxacompra[4]; //adquirir nomes e siglas das criptomoedas
-    lerdadoscriptomoedas(sigla_cripto, nome_cripto, cotacao, taxavenda, taxacompra);
+    ler_dados_criptomoedas(sigla_cripto, nome_cripto, cotacao, taxavenda, taxacompra);
 
     printf("Saldo atual: R$ %.2f\n", moedas[0]);
     for (int j = 0; j < quantidade_moedas; j++)
@@ -411,28 +419,83 @@ void consultar_saldo(long long cpf_investidor, int linha_usuario){
     fclose(fp);
 }
 
-int Consultar_Extrato(){
-  char CPF_INVESTIDOR[12];
+void consultar_extrato(int linha_usuario){
+    char nome[20];
+    sprintf(nome, "user%dextrato.txt", linha_usuario);
+    FILE *fp = fopen (nome, "r");
+    if(fp == NULL){
+        printf("Erro na abertura do arquivo para leitura (extrato).\n");
+        return;
+    };
 
-  printf(" ");
-  printf("--------------------CONSULTAR EXTRATO--------------------\n");
-  printf("CPF do investidor para consulta: ");
-  scanf("%s", CPF_INVESTIDOR);
+    int linhas_maximo = 40;
+    int tamanho_linha = 200;
+    char extrato[linhas_maximo][tamanho_linha];
+    int i = 0;
 
-  // while(CPF_INVESTIDOR != CPF NO ARQUIVO){
-  //   printf("CPF INVALIDO TENTE NOVAMENTE!");
-  //   printf("CPF do investidor para consulta: ");
-  //   scanf("%s", CPF_INVESTIDOR);
-  // }if(CPF_INVESTIDOR == CPF ARQUIVO){
-  //   printf("ARQUIVOOOO");
-
-  // }
-  return 0;
+    while (fgets(extrato[i], tamanho_linha, fp) != NULL){
+        i++;
+    }
+    if (i == 0)
+        printf("Extrato vazio.\n");
+    else{
+        printf("Extrato:\n");
+        for (int j = 0; j < i; j++)
+            printf("%s", extrato[j]);
+    }
 }
 
-int Atualizar_Cripto(){
-  
-  return 0;
+void apagar_criptomoedas(){
+    FILE *fp = fopen("cotacao_criptomoedas.txt", "w");
+    if (fp == NULL){
+        printf("erro ao abrir o arquivo 'cotacao_criptomoedas.txt'");
+        return;}
+    fclose(fp);
+}
+
+// void printar_criptomoedas(float *cotacoes){
+//     FILE *fp = fopen("cotacao_criptomoedas.txt", "r");
+//     if (fp == NULL){
+//         printf("erro ao abrir o arquivo 'cotacao_criptomoedas.txt'");
+//         return;}
+
+//     // float btc, eth, xrp;
+//     // float *cotacoes[] = {&btc, &eth, &xrp};
+//     char *nomes[] = {"Bitcoin", "Ethereum", "Ripple"};
+
+//     int qtde_criptomoedas = 3;
+//     for (int i = 0; i < qtde_criptomoedas; i++){
+//         fscanf(fp, "%f", &cotacoes[i]);
+//     }
+//     printf("Cotacao atualizada:\n");
+//     for (int j = 0; j < qtde_criptomoedas; j++)
+//         printf("%s: %.2f\n", nomes[j], cotacoes[j]);
+
+//     fclose(fp);
+// }
+
+// int atualizar_criptomoedas(){
+//     //ler qtde cripto (cotacoes.txt), fscanf de cada uma, for de atualizar_criptomoedas
+//     return 0;
+// }
+
+void atualizar_criptomoedas(float valor_base){
+    FILE *fp = fopen("cotacao_criptomoedas.txt", "a");
+    if (fp == NULL){
+        printf("erro ao abrir o arquivo 'cotacao_criptomoedas.txt'");
+        return;}
+
+    int subtracao_adicao = (rand() % 2); // random entre 0 e 1. se 0 = subtrai 0-5% ao valor base. se 1, adiciona
+    float percentual = (rand() % 6) / 100.0; // valor entre 0 e 5%:
+
+    if(subtracao_adicao == 0)
+        valor_base -= valor_base * percentual;
+    else
+        valor_base += valor_base * percentual;
+    
+    fprintf(fp, "%.2f\n", valor_base);
+
+    fclose(fp);
 }
 
 int main(void) {
@@ -467,6 +530,8 @@ int main(void) {
 
     MENU();
     int opcao;
+    long long cpf_investidor;
+    int linha_usuario;
     do{
         printf("\nSelecione a operacao desejada ou digite 8 para ver o menu novamente: ");
         scanf("%d", &opcao);
@@ -491,8 +556,8 @@ int main(void) {
             break;
         case 5:
             printf("\n5. Consultar saldo de um investidor:\n");
-            long long cpf_investidor;
-            int linha_usuario;
+            // long long cpf_investidor;
+            // int linha_usuario;
 
             while(1){
                 printf("Digite o CPF de investidor: ");
@@ -507,11 +572,43 @@ int main(void) {
             break;
         case 6:
             printf("\n6. Consultar extrato de um investidor:\n");
-            Consultar_Extrato();
+            // long long cpf_investidor;
+            // int linha_usuario;
+
+            while(1){
+                printf("Digite o CPF de investidor: ");
+                scanf("%lld", &cpf_investidor);
+                if (buscar_linha_investidor(cpf_investidor, &linha_usuario))
+                    break;
+                else{
+                    printf("Insira um CPF valido.\n");
+                    continue;}
+            }
+            consultar_extrato(linha_usuario);
             break;
         case 7:
             printf("\n7. Atualizar cotacoes:\n");
-            Atualizar_Cripto();
+            int quantidade_criptomoedas;
+            contar_criptomoedas(&quantidade_criptomoedas);
+            apagar_criptomoedas();
+
+            char sigla_cripto[4][4];
+            char nome_cripto[4][20];
+            float cotacao[4];
+            float taxavenda[4];
+            float taxacompra[4]; //adquirir nomes e siglas das criptomoedas
+            ler_dados_criptomoedas(sigla_cripto, nome_cripto, cotacao, taxavenda, taxacompra);
+            
+            for (int i = 0; i < quantidade_criptomoedas; i++){
+                atualizar_criptomoedas(cotacao[i]);
+            }
+            // atualizar_criptomoedas(352980.21f);
+            // atualizar_criptomoedas(14250.63f);
+            // atualizar_criptomoedas(3.81f);
+
+            // float cotacoes[quantidade_criptomoedas];
+            // printar_criptomoedas(cotacoes);
+            
             break;
         case 8:
             printf("\n8. Menu:\n");
