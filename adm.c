@@ -1,13 +1,6 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
-#define MAX_CPF 12
-#define MAX_NOME 200
-
-struct ADM {
-    char CPF_ADM[12];
-    int SENHA_ADM;
-};
-
 
 int conferirCPF(long long cpf){
     int linha_busca = 0;
@@ -29,8 +22,10 @@ int conferirCPF(long long cpf){
 
     if (cpf == cpf_busca)
         return 1;
+
     fclose(fp);
-}
+    return 0;
+};
 
 int conferir_senha(int senha){
     int senha_busca;
@@ -43,8 +38,8 @@ int conferir_senha(int senha){
     };
 
     while (fscanf(fp, "%d", &senha_busca) != EOF){
-        linha_busca++;        // armazena a senha correta, já que a 2ª linha
-        if (linha_busca == 2) // no user[].txt, contem a senha do usuario.
+        linha_busca++;
+        if (linha_busca == 2)
             break;
     }
     if (senha == senha_busca)
@@ -54,7 +49,7 @@ int conferir_senha(int senha){
     return 0;
 };
 
-void MENU(){
+void menu(){
     printf("\n--------------------------\n");
     printf("1. Cadastro de novo investidor\n");
     printf("2. Excluir investidor\n");
@@ -68,32 +63,8 @@ void MENU(){
     printf("--------------------------\n");
 };
 
-void remover_CPF_do_arquivo(const char *cpf_remover) {//FUNÇÂO PARA REMOVER O USUARIO DO USUARIOS.TXT
-  char cpf_atual[MAX_CPF];
-  FILE *arquivo = fopen("usuarios.txt", "r");
-  FILE *arquivo_temp = fopen("temp.txt", "w");
-
-  if (arquivo == NULL || arquivo_temp == NULL) {
-    printf("Erro ao abrir os arquivos para leitura/escrita.\n");
-    return;
-  }
-  while (fgets(cpf_atual, sizeof(cpf_atual), arquivo) != NULL) {//LE AS LINHAS DO ARQUIVO
-    cpf_atual[strcspn(cpf_atual, "\n")] = 0;//REMOVE A LINHA SE EXISTIR
-
-    if (strcmp(cpf_atual, cpf_remover) != 0) {//ESCRITURA NO ARQUIVO TEMPORARIO
-      fprintf(arquivo_temp, "%s\n", cpf_atual);
-    }
-  }
-  fclose(arquivo);
-  fclose(arquivo_temp);
-
-  remove("usuarios.txt");//EXCLUI O ARQUIVO
-  rename("temp.txt", "usuarios.txt");//RENOMEIA O ARQUIVO TEMPORARIO PARA O USUARIO.TXT
-}
-
 void contar_criptomoedas(int *qtde_linhas){ //contar qtde de criptomoedas
     FILE *fp = fopen("criptomoedas.txt", "r");
-
     if(fp == NULL){
         printf("erro na abertura do arquivo para leitura (criptomoedas.txt).\n");
         return;
@@ -104,8 +75,7 @@ void contar_criptomoedas(int *qtde_linhas){ //contar qtde de criptomoedas
     while((c = fgetc(fp)) != EOF){
         if (c == '\n')
             (*qtde_linhas)++;
-    }
-
+    };
     *qtde_linhas = *qtde_linhas/5;
 
     fclose(fp);
@@ -128,9 +98,9 @@ void quantidade_investidores(int *quantidade_cpfs){
     fclose(arquivo);
 }
 
-int Novo_investidor(){//FUNCAO PARA INCLUIR NOVO INVESTIDOR
+int novo_investidor(){//FUNCAO PARA INCLUIR NOVO INVESTIDOR
     int SENHA_N_INVEST;
-    char NOME[MAX_NOME];
+    char NOME[200];
     long long CPF_N_INVEST;
 
     //contador cpfs e nova linha de cpf ao usuarios.txt
@@ -141,17 +111,14 @@ int Novo_investidor(){//FUNCAO PARA INCLUIR NOVO INVESTIDOR
     if (arquivo == NULL) {
         printf("Erro ao abrir o arquivo para cadastro (usuarios.txt)\n");
         return 1;
-    }
+    };
 
     int quantidade_cpfs = 0;
     int i = 0;
-
+    
     while (fscanf(arquivo, "%lld", &cpfs[quantidade_cpfs]) != EOF && quantidade_cpfs < maximo_cpfs) {
         quantidade_cpfs++;
     }
-
-    for (int j = 0; j < quantidade_cpfs; j++)
-        printf("cpf[%d] == %lld\n", j, cpfs[j]);
 
     while(1){
         printf("Nome do investidor: ");
@@ -169,9 +136,7 @@ int Novo_investidor(){//FUNCAO PARA INCLUIR NOVO INVESTIDOR
         }if (CPF_N_INVEST < 10000000000 || CPF_N_INVEST > 99999999999 || SENHA_N_INVEST < 100000 || SENHA_N_INVEST > 999999){
             printf("CPF ou SENHA invalidos! Tente novamente!\n");
             continue;
-        }
-
-        else
+        }else
             break;
     }
 
@@ -190,7 +155,7 @@ int Novo_investidor(){//FUNCAO PARA INCLUIR NOVO INVESTIDOR
     fprintf(arquivo_investidor,"%s\n", NOME);
     int quantidade_criptomoedas;
     contar_criptomoedas(&quantidade_criptomoedas);    
-    for(int i = 0; i < quantidade_criptomoedas; i++) // 3 criptomoedas = 15/5 (5 linhas por cripto no criptomoedas.txt)
+    for(int i = 0; i < quantidade_criptomoedas+1; i++) //criptomoedas + R$
         fprintf(arquivo_investidor, "0.0\n");
     fclose(arquivo_investidor);
     // printf("quantidade criptomoedas: %d", quantidade_criptomoedas/5);
@@ -207,61 +172,9 @@ int Novo_investidor(){//FUNCAO PARA INCLUIR NOVO INVESTIDOR
     printf("Cadastro efetuado!\n");
 }
 
-int Excluir_Investidor(){//FUNÇÂO PARA EXCLUIR QLQR INVESTIDOR
-    long long cpf_investidor;
-    int senha_login;
-    int linha_usuario;
-
-            while(1){
-                printf("Digite o CPF de investidor: ");
-                scanf("%lld", &cpf_investidor);
-                if (buscar_linha_investidor(cpf_investidor, &linha_usuario))
-                    break;
-                else{
-                    printf("Insira um CPF valido.\n");
-                    continue;}
-            }
-    
-    //FAZER A LOGICA DA PESQUISA DO CPF E APRESENTAR OS DADOS DAQUELE ARQUIVO DO INVESTIDOR
-    consultar_saldo(cpf_investidor, linha_usuario);
-    
-    printf("Confirme a exclusao com a senha do administrador: ");
-    scanf("%d", &senha_login);
-    
-    while(1){ //senha valida
-        printf("Senha: ");
-        scanf("%d", &senha_login);
-
-
-        if (conferir_senha(senha_login)){
-            printf("Login efetuado com sucesso!\n");
-            break;
-        }else{
-            printf("Senha incorreta. Insira sua senha novamente.\n");
-            continue;
-        }
-    }
-
-    char nome_arquivo[50];
-    snprintf(nome_arquivo, sizeof(nome_arquivo), "user%d.txt", linha_usuario);
-
-    if (remove(nome_arquivo) == 0) {
-        printf("Arquivo do investidor excluído com sucesso!\n");
-    } else {
-        printf("Erro ao excluir o arquivo do investidor. Verifique se o CPF está correto.\n");
-        return -1;
-    }
-
-    remover_CPF_do_arquivo(cpf_investidor);//REMOVENDO DO USUARIOS.TXT
-    printf("Investidor excluído com sucesso!\n");
-    
-    printf("Investidor excluido com sucesso!\n");
-    return 0;
-}
-
 void Cadastro_Cript(){
     float tax_C, tax_V, Cot_In;
-    char NOME[MAX_NOME], sigla[4];
+    char NOME[200], sigla[4];
 
     printf("Nome da moeda: ");
     scanf("%s", NOME);
@@ -317,7 +230,7 @@ void Cadastro_Cript(){
 }
 
 // int Excluir_Cript(struct ADM adm){
-//   char MOEDA[MAX_NOME];
+//   char MOEDA[200];
 //   int SENHA_CONFI;
 
 //   printf(" ");
@@ -342,29 +255,6 @@ void Cadastro_Cript(){
 //   return 0;
 // }
 
-int buscar_linha_investidor(long long cpf, int *linha_usuario){
-    long long cpf_busca;
-    *linha_usuario = 1;
-
-    FILE *fp = fopen("usuarios.txt", "r");
-
-    if(fp == NULL){
-        printf("erro na abertura do arquivo usuarios.txt para leitura.\n");
-        return 1;
-    };
-    
-    while (fscanf(fp, "%lld", &cpf_busca) != EOF){
-        if (cpf_busca == cpf){
-            return 1; // cpf valido
-            break;
-        }else
-            (*linha_usuario)++;
-    };
-    fclose(fp);
-    printf("linha1: %d\n", linha_usuario);
-    return 0;
-}
-
 void ler_dados_criptomoedas(char sigla[][4], char nome[][20], float *cotacao, float *taxavenda, float *taxacompra){
     FILE *fp = fopen("criptomoedas.txt", "r");
 
@@ -379,7 +269,9 @@ void ler_dados_criptomoedas(char sigla[][4], char nome[][20], float *cotacao, fl
         fscanf(fp, "%f", &cotacao[i]);
         fscanf(fp, "%f", &taxacompra[i]);
         fscanf(fp, "%f", &taxavenda[i]);
-    }
+    };
+
+    fclose(fp);
 }
 
 void consultar_saldo(long long cpf_investidor, int linha_usuario){
@@ -418,6 +310,102 @@ void consultar_saldo(long long cpf_investidor, int linha_usuario){
 
     fclose(fp);
 }
+
+int buscar_linha_investidor(long long cpf, int *linha_usuario){
+    long long cpf_busca;
+    *linha_usuario = 1;
+
+    FILE *fp = fopen("usuarios.txt", "r");
+
+    if(fp == NULL){
+        printf("erro na abertura do arquivo usuarios.txt para leitura.\n");
+        return 1;
+    };
+    
+    while (fscanf(fp, "%lld", &cpf_busca) != EOF){
+        if (cpf_busca == cpf){
+            return 1; // cpf valido
+            break;
+        }else
+            (*linha_usuario)++;
+    };
+    fclose(fp);
+    printf("linha1: %d\n", linha_usuario);
+    return 0;
+}
+
+void remover_CPF_do_arquivo(int linha_usuario) {
+    //salva todos os cpfs em um array, escreve por cima todos menos o cpf excluido
+    int quantidade_cpfs = 0;
+    quantidade_investidores(&quantidade_cpfs);
+    
+    long long cpfs[quantidade_cpfs];
+    FILE *fp = fopen("usuarios.txt", "r");
+    if (fp == NULL){
+        printf("erro na leitura do usuarios.txt\n");
+        return;
+    }
+    for (int i = 0; i < linha_usuario; i++)
+        fscanf(fp, "%lld", &cpfs[i]);
+    fclose(fp);
+
+
+    FILE *fp2 = fopen("usuarios.txt", "w");
+    if (fp2 == NULL){
+        printf("erro na escrita do usuarios.txt\n");
+        return;
+    }
+
+    for (int i = 0; i < quantidade_cpfs; i++) {
+        if (i != linha_usuario - 1)
+            fprintf(fp2, "%lld\n", cpfs[i]);
+    }
+    
+    fclose(fp2);
+    printf("Conta de investidor (%d) excluida!", cpfs[linha_usuario]);
+}
+
+void excluir_investidor(){
+    printf("Insira o CPF de investidor para exclusao.\n");
+    long long cpf_investidor;
+    int linha_usuario;
+    while(1){
+        printf("CPF: ");
+        scanf("%lld", &cpf_investidor);
+        if (buscar_linha_investidor(cpf_investidor, &linha_usuario))
+            break;
+        else{
+            printf("Insira um CPF valido.\n");
+            continue;}
+    }
+
+    consultar_saldo(cpf_investidor, linha_usuario);//printa saldo do investidor da exclusao
+
+    int senha;
+    printf("Para confirmar a exclusao, insira novamente a senha de administador.\n");
+    while(1){
+        printf("Senha: ");
+        scanf("%d", &senha);
+        conferir_senha(senha);
+        if (conferir_senha(senha)){
+            printf("Login efetuado com sucesso!\n");
+            break;
+        }else{
+            printf("Senha incorreta. Insira sua senha novamente.\n");
+            continue;
+        }
+    }
+    remover_CPF_do_arquivo(linha_usuario);
+    
+    char nome[20];
+    sprintf(nome, "user%d.txt", linha_usuario);
+    remove(nome);
+    char nome2[30];
+    sprintf(nome2, "user%dextrato.txt", linha_usuario);
+    remove(nome2);
+
+}
+
 
 void consultar_extrato(int linha_usuario){
     char nome[20];
@@ -528,7 +516,7 @@ int main(void) {
         }
     }
 
-    MENU();
+    menu();
     int opcao;
     long long cpf_investidor;
     int linha_usuario;
@@ -539,11 +527,11 @@ int main(void) {
         switch(opcao){
         case 1:
             printf("\n1. Cadastro de novo investidor:\n");
-            Novo_investidor();
+            novo_investidor();
             break;
         case 2:
             printf("\n2. Excluir investidor:\n");
-            Excluir_Investidor();
+            excluir_investidor();
             // Excluir_Investidor(adm);
             break;
         case 3:
@@ -612,7 +600,7 @@ int main(void) {
             break;
         case 8:
             printf("\n8. Menu:\n");
-            MENU();
+            menu();
             break;
         case 0:
             printf("\nVoce saiu do sistema. Ate logo!\n");
