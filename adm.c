@@ -558,14 +558,6 @@ void consultar_extrato_adm(int linha_usuario){
     }
 }
 
-void apagar_criptomoedas_adm(){
-    FILE *fp = fopen("cotacao_criptomoedas.txt", "w");
-    if (fp == NULL){
-        printf("erro ao abrir o arquivo 'cotacao_criptomoedas.txt'");
-        return;}
-    fclose(fp);
-}
-
 void printar_criptomoedas_adm(int quantidade_cripto, char nome[][20]){
     FILE *fp = fopen("cotacao_criptomoedas.txt", "r");
     if (fp == NULL){
@@ -690,7 +682,7 @@ int main(void) {
             printf("\n7. Atualizar cotacoes:\n");
             int quantidade_criptomoedas;
             contar_criptomoedas(&quantidade_criptomoedas);
-            apagar_criptomoedas_adm();
+            apagar_dados_arquivo("cotacao_criptomoedas.txt");
 
             char (*sigla_cripto)[4] = malloc(quantidade_criptomoedas * sizeof(*sigla_cripto));
             char (*nome_cripto)[20] = malloc(quantidade_criptomoedas * sizeof(*nome_cripto));

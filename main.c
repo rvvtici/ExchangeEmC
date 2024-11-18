@@ -98,7 +98,7 @@ void ler_dados_criptomoedas(char sigla[][4], char nome[][20], float *cotacao, fl
     fclose(fp);
 }
 
-void consultar_saldo(int linha_usuario, long *cpf, int *senha, char nome_investidor[], float *moeda){
+void consultar_saldo(int linha_usuario, long *cpf, int *senha, char nome_investidor[], float *moedas){
     char nome[10];
     sprintf(nome, "user%d.txt", linha_usuario);
     FILE *fp = fopen (nome, "r");
@@ -109,7 +109,6 @@ void consultar_saldo(int linha_usuario, long *cpf, int *senha, char nome_investi
     int quantidade_criptomoedas = 0;
     contar_criptomoedas(&quantidade_criptomoedas); // contar qtde criptomoedas
 
-    float *moedas = malloc(quantidade_criptomoedas * sizeof(*moedas));
     fscanf(fp, "%ld", cpf);   // cpf (descartavel, usando apenas pra pular pra próxima linha)
     fscanf(fp, "%d", senha);   // senha (descartavel, igual o cpf)
     fscanf(fp, "%s", nome_investidor);
@@ -136,7 +135,7 @@ void consultar_saldo(int linha_usuario, long *cpf, int *senha, char nome_investi
     free(taxacompra);
 }
 
-void adicionar_linha_extrato(int linha_usuario, char operacao, float valor, char *tipo, float cotacao, float taxa, float *moedas){
+void adicionar_linha_extrato(int linha_usuario, char operacao, float valor, int escolha, float taxa){
     char nome[20];
     sprintf(nome, "user%dextrato.txt", linha_usuario);
     FILE *fp = fopen (nome, "a");
@@ -150,9 +149,41 @@ void adicionar_linha_extrato(int linha_usuario, char operacao, float valor, char
     struct tm *info_tempo = localtime(&tempo_atual);
     strftime(tempo, sizeof(tempo), "%d/%m/%Y %H:%M:%S", info_tempo);
 
-    fprintf(fp,"%s %c %16.8f %s CT: %10.2f TX: %3.2f R$: %9.2f BTC: %9.6f ETH: %8.4f XRP: %7.2f\n", tempo, operacao, valor, tipo, cotacao, taxa, moedas[0], moedas[1], moedas[2], moedas[3]);
-    printf("Nova linha adicionada ao extrato:\n");
-    printf("%s %c %16.8f %s CT: %10.2f TX: %3.2f R$: %9.2f BTC: %9.6f ETH: %8.4f XRP: %7.2f\n", tempo, operacao, valor, tipo, cotacao, taxa, moedas[0], moedas[1], moedas[2], moedas[3]);
+
+    int quantidade_criptomoedas = 0;
+    contar_criptomoedas(&quantidade_criptomoedas); // contar qtde criptomoedas
+
+    char (*sigla_cripto)[4] = malloc(quantidade_criptomoedas * sizeof(*sigla_cripto));
+    char (*nome_cripto)[20] = malloc(quantidade_criptomoedas * sizeof(*nome_cripto));
+    float *cotacoes = malloc(quantidade_criptomoedas * sizeof(*cotacoes));
+    float *taxavenda = malloc(quantidade_criptomoedas * sizeof(*taxavenda));
+    float *taxacompra = malloc(quantidade_criptomoedas * sizeof(*taxacompra));
+    ler_dados_criptomoedas(sigla_cripto, nome_cripto, cotacoes, taxavenda, taxacompra, quantidade_criptomoedas);
+
+    long cpf;
+    int senha;
+    char nome_investidor[200];
+    float *moedas = malloc(quantidade_criptomoedas * sizeof(*moedas));
+    consultar_saldo(linha_usuario, &cpf, &senha, nome_investidor, moedas);
+
+    if (escolha >= 0){
+        printf("Nova linha adicionada ao extrato:\n");
+        printf("%s %c %16.8f %s CT: %10.2f TX: %3.2f  R$: %9.2f ", tempo, operacao, valor, sigla_cripto[escolha - 1], cotacoes[escolha - 1], taxa, moedas[0]);
+        fprintf(fp, "%s %c %16.8f %s CT: %10.2f TX: %3.2f  R$: %9.2f ", tempo, operacao, valor, sigla_cripto[escolha - 1], cotacoes[escolha - 1], taxa, moedas[0]);
+        for (int i = 0; i < quantidade_criptomoedas; i++){
+            printf("%s %9.6f ", sigla_cripto[i], moedas[i+1]);
+            fprintf(fp, "%s %9.6f ", sigla_cripto[i], moedas[i+1]);
+    }
+    }else{
+        printf("Nova linha adicionada ao extrato:\n");
+        printf("%s %c %16.8f R$ CT: 0.0 TX: 0.0  R$: %9.2f ", tempo, operacao, valor, moedas[0]);
+        fprintf(fp, "%s %c %16.8f R$ CT: 0.0 TX: 0.0  R$: %9.2f ", tempo, operacao, valor, moedas[0]);
+        for (int i = 0; i < quantidade_criptomoedas; i++){
+            printf("%s %9.6f ", sigla_cripto[i], moedas[i+1]);             
+            fprintf(fp, "%s %9.6f ", sigla_cripto[i], moedas[i+1]);
+        }        
+    }printf("\n");
+    fprintf(fp, "\n");
 
     fclose(fp);
 }
@@ -180,10 +211,9 @@ void depositar_fundos(int linha_usuario){
     int quantidade_criptomoedas = 0;
     contar_criptomoedas(&quantidade_criptomoedas); // contar qtde criptomoedas
 
-    float *moedas = malloc(quantidade_criptomoedas * sizeof(*moedas));
     char nome_investidor[200];
+    float *moedas = malloc(quantidade_criptomoedas * sizeof(*moedas));
     consultar_saldo(linha_usuario, &cpf, &senha, nome_investidor, moedas);
-    // consultar_saldo(linha_usuario, &cpf, &senha, moedas); //usando a função consultar_saldo pra pegar o saldo atual
 
     float valor_deposito;
     while(1){
@@ -204,10 +234,10 @@ void depositar_fundos(int linha_usuario){
     sobrescrever_dados(linha_usuario, cpf, senha, nome_investidor, moedas, quantidade_criptomoedas);
 
     char operacao = '+'; //chamar funcao de extrato
-    char tipo[4] = " R$";
     float taxa = 0.0;
-    float cotacao = 0.0;
-    // adicionar_linha_extrato(linha_usuario, operacao, valor_deposito, tipo, cotacao, taxa, moedas);
+    int escolha = -1;
+    
+    adicionar_linha_extrato(linha_usuario, operacao, valor_deposito, escolha, taxa);
 }
 
 void consultar_extrato(int linha_usuario){
@@ -234,16 +264,16 @@ void consultar_extrato(int linha_usuario){
         for (int j = 0; j < i; j++)
             printf("%s", extrato[j]);
     }
-
 }
 
 void sacar_fundos(int linha_usuario){
     long cpf;
     int senha;
-    float moedas[4] = {0.0f};
     char nome_investidor[200];
     int quantidade_criptomoedas;
     contar_criptomoedas(&quantidade_criptomoedas);
+
+    float *moedas = malloc(quantidade_criptomoedas * sizeof(*moedas));
     consultar_saldo(linha_usuario, &cpf, &senha, nome_investidor, moedas);
     
     float valor_saque;
@@ -269,10 +299,10 @@ void sacar_fundos(int linha_usuario){
     sobrescrever_dados(linha_usuario, cpf, senha, nome_investidor, moedas, quantidade_criptomoedas);
 
     char operacao = '-'; //chamar funcao de extrato
-    char tipo[4] = " R$";
     float taxa = 0.0;
-    float cotacao = 0.0;
-    adicionar_linha_extrato(linha_usuario, operacao, valor_saque, tipo, cotacao, taxa, moedas);
+    int escolha = -1;
+
+    adicionar_linha_extrato(linha_usuario, operacao, valor_saque, escolha, taxa);
 }
 
 void apagar_criptomoedas(){
@@ -323,59 +353,56 @@ void printar_criptomoedas(int quantidade_cripto, char nome[][20]){
 void comprar_criptomoedas(int linha_usuario){
     long cpf;
     int senha;
-    float moedas[4] = {0.0f};
+    int quantidade_criptomoedas;
     char nome_investidor[200];
+    contar_criptomoedas(&quantidade_criptomoedas);
+    float *moedas = malloc(quantidade_criptomoedas * sizeof(*moedas));
     consultar_saldo(linha_usuario, &cpf, &senha, nome_investidor, moedas);
-    int qtde_criptomoedas = 3;
-    char *nomes[] = {"Bitcoin", "Ethereum", "Ripple"};
-    char *siglas[] = {"BTC", "ETH", "XRP"};
-    float taxa_compra[4] = {2, 1, 1};
-    int escolha;
 
+    char (*sigla_cripto)[4] = malloc(quantidade_criptomoedas * sizeof(*sigla_cripto));
+    char (*nome_cripto)[20] = malloc(quantidade_criptomoedas * sizeof(*nome_cripto));
+    float *cotacao = malloc(quantidade_criptomoedas * sizeof(*cotacao));
+    float *taxavenda = malloc(quantidade_criptomoedas * sizeof(*taxavenda));
+    float *taxacompra = malloc(quantidade_criptomoedas * sizeof(*taxacompra));
+    ler_dados_criptomoedas(sigla_cripto, nome_cripto, cotacao, taxavenda, taxacompra, quantidade_criptomoedas);
+
+    int escolha;
     while(1){
-        for(int i = 0; i < qtde_criptomoedas; i++)
-            printf("%d. %s\n", i+1, nomes[i]);
-        printf("Escolha a criptomoeda desejada: ");
+        for(int i = 0; i < quantidade_criptomoedas; i++)
+            if (i == quantidade_criptomoedas - 1)
+                printf("%d. %s\n", i+1, nome_cripto[i]);
+            else 
+                printf("%d. %s | ", i+1, nome_cripto[i]);
+        printf("Digito da criptomoeda desejada: ");
         scanf("%d", &escolha);
-        if (escolha >= 1 && escolha <= qtde_criptomoedas){
-            printf("%s escolhida.\n", nomes[escolha-1]);
-            printf("Taxa de compra: %.0f%%\n", taxa_compra[escolha-1]);
+        if (escolha >= 1 && escolha <= quantidade_criptomoedas){
+            printf("%s escolhida.\n", nome_cripto[escolha-1]);
+            printf("Taxa de compra (%s): %.0f%%\n", sigla_cripto[escolha-1], taxacompra[escolha-1]);
             break;}
         else{
             printf("Insira um valor valido.");
             continue;}
     }
 
-    float cotacoes[3] = {0.0f};
-
-    int quantidade_criptomoedas;
-    contar_criptomoedas(&quantidade_criptomoedas);
-    char (*sigla_cripto)[4] = malloc(quantidade_criptomoedas * sizeof(*sigla_cripto));
-    char (*nome_cripto)[20] = malloc(quantidade_criptomoedas * sizeof(*nome_cripto));
-    float *cotacao = malloc(quantidade_criptomoedas * sizeof(*cotacao));
-    float *taxavenda = malloc(quantidade_criptomoedas * sizeof(*taxavenda));
-    float *taxacompra = malloc(quantidade_criptomoedas * sizeof(*taxacompra));
-
-    ler_dados_criptomoedas(sigla_cripto, nome_cripto, cotacao, taxavenda, taxacompra, quantidade_criptomoedas);
-
     printar_criptomoedas(quantidade_criptomoedas, nome_cripto); //usando a função pra pegar cotacoes atuais
 
+    float saldo_convertido_em_cripto; // valor de compra convertido em cripto
     float valor_compra;
     while(1){
         printf("Digite o valor da compra em reais: ");
         scanf("%f", &valor_compra);
-        if (valor_compra > moedas[0]-moedas[0] * taxa_compra[escolha-1]/100){
-            printf("O saldo em reais nao pode ficar negativo.\nInsira um valor ate %.2f (taxa de compra: %.0f%%)\n", moedas[0]-moedas[0]*taxa_compra[escolha-1]/100, taxa_compra[escolha-1]);
+        if (valor_compra > moedas[0]-moedas[0] * taxacompra[escolha-1]/100){
+            printf("O saldo em reais nao pode ficar negativo.\nInsira um valor ate %.2f [taxa de compra: %.0f%%]\n", moedas[0]-moedas[0]*taxacompra[escolha-1]/100, taxacompra[escolha-1]);
             continue;}
         else if (valor_compra == 0){
             printf("Compra cancelada.\n");
             return;
         }
     int digito;
-    float saldo_convertido_em_cripto; // valor de compra convertido em cripto
-    saldo_convertido_em_cripto = (valor_compra - (valor_compra*(taxa_compra[escolha-1]/100))) / cotacoes[escolha-1];
 
-    printf("R$ %.2f equivale a %.6f %s. Deseja confirmar a compra?\n1. Confirmar | 0. Cancelar a compra: ", valor_compra, saldo_convertido_em_cripto, siglas[escolha-1]);
+    saldo_convertido_em_cripto = (valor_compra - (valor_compra*(taxacompra[escolha-1]/100))) / cotacao[escolha-1];
+
+    printf("R$ %.2f equivale a %.6f %s [taxa de compra: %0.f%%]. Deseja confirmar a compra?\n1. Confirmar | 0. Cancelar a compra: ", valor_compra, saldo_convertido_em_cripto, sigla_cripto[escolha-1], taxacompra[escolha-1]);
     scanf("%d", &digito);
     if (digito == 1) {
         printf("Compra confirmada.\n");
@@ -389,65 +416,64 @@ void comprar_criptomoedas(int linha_usuario){
         continue;}
     }
 
-    moedas[0] -= moedas[0]*taxa_compra[escolha-1]/100;
+    moedas[0] -= moedas[0]*taxacompra[escolha-1]/100;
     moedas[0] -= valor_compra;
     sobrescrever_dados(linha_usuario, cpf, senha, nome_investidor, moedas, quantidade_criptomoedas);
 
 
     char operacao = '+'; //chamar funcao de extrato
-    adicionar_linha_extrato(linha_usuario, operacao, (valor_compra - valor_compra * taxa_compra[escolha-1]/100)/cotacoes[escolha-1], siglas[escolha-1], cotacoes[escolha-1], taxa_compra[escolha-1], moedas);
+    float taxa = taxacompra[escolha-1];
+
+
+    adicionar_linha_extrato(linha_usuario, operacao, saldo_convertido_em_cripto, escolha, taxa);
 }
 
 void venda_criptomoedas(int linha_usuario){
     long cpf;
     int senha;
-    float moedas[4] = {0.0f};
+    int quantidade_criptomoedas;
     char nome_investidor[200];
+    contar_criptomoedas(&quantidade_criptomoedas);
+    float *moedas = malloc(quantidade_criptomoedas * sizeof(*moedas));
     consultar_saldo(linha_usuario, &cpf, &senha, nome_investidor, moedas);
-    int qtde_criptomoedas = 3;
-    char *nomes[] = {"Bitcoin", "Ethereum", "Ripple"};
-    char *siglas[] = {"BTC", "ETH", "XRP"};
-    float taxa_venda[4] = {3, 2, 1};
+
+    char (*sigla_cripto)[4] = malloc(quantidade_criptomoedas * sizeof(*sigla_cripto));
+    char (*nome_cripto)[20] = malloc(quantidade_criptomoedas * sizeof(*nome_cripto));
+    float *cotacao = malloc(quantidade_criptomoedas * sizeof(*cotacao));
+    float *taxavenda = malloc(quantidade_criptomoedas * sizeof(*taxavenda));
+    float *taxacompra = malloc(quantidade_criptomoedas * sizeof(*taxacompra));
+    ler_dados_criptomoedas(sigla_cripto, nome_cripto, cotacao, taxavenda, taxacompra, quantidade_criptomoedas);
+
     int escolha;
 
     while(1){
-        for(int i = 0; i < qtde_criptomoedas; i++)
-            printf("%d. %s\n", i+1, nomes[i]);
+        for(int i = 0; i < quantidade_criptomoedas; i++)
+            if (i == quantidade_criptomoedas - 1)
+                printf("%d. %s\n", i+1, nome_cripto[i]);
+            else 
+                printf("%d. %s | ", i+1, nome_cripto[i]);
         printf("Escolha a criptomoeda desejada: ");
         scanf("%d", &escolha);
-        if (escolha >= 1 && escolha <= qtde_criptomoedas){
-            printf("%s escolhida.\n", nomes[escolha-1]);
-            printf("Taxa de venda: %.0f%%\n", taxa_venda[escolha-1]);
+        if (escolha >= 1 && escolha <= quantidade_criptomoedas){
+            printf("%s escolhida.\n", nome_cripto[escolha-1]);
+            printf("Taxa de venda: %.0f%%\n", taxavenda[escolha-1]);
             break;}
         else{
             printf("Insira um valor valido.");
             continue;}
     }
 
-    float cotacoes[3] = {0.0f};
-
-    int quantidade_criptomoedas;
-    contar_criptomoedas(&quantidade_criptomoedas);
-    char (*sigla_cripto)[4] = malloc(quantidade_criptomoedas * sizeof(*sigla_cripto));
-    char (*nome_cripto)[20] = malloc(quantidade_criptomoedas * sizeof(*nome_cripto));
-    float *cotacao = malloc(quantidade_criptomoedas * sizeof(*cotacao));
-    float *taxavenda = malloc(quantidade_criptomoedas * sizeof(*taxavenda));
-    float *taxacompra = malloc(quantidade_criptomoedas * sizeof(*taxacompra));
-
-    ler_dados_criptomoedas(sigla_cripto, nome_cripto, cotacao, taxavenda, taxacompra, quantidade_criptomoedas);
-
     printar_criptomoedas(quantidade_criptomoedas, nome_cripto); //usando a função pra pegar cotacoes atuais
 
     float valor_venda;
+    float saldo_convertido_em_cripto; // valor de venda convertido em cripto
     while(1){
         printf("Digite o valor da venda em reais: ");
         scanf("%f", &valor_venda);
-        printf("moedas[escolha] * cotacoes[escolha-1]: %f\n", moedas[escolha] * cotacoes[escolha-1]);
-        printf("taxa_venda[escolha-1]/100) %f\n", moedas[escolha] * cotacoes[escolha-1] * taxa_venda[escolha-1]/100);
             //se valor de venda > qtde btc * cotacao btc * taxa venda
-        if (valor_venda > moedas[escolha] * cotacoes[escolha-1] - moedas[escolha] * cotacoes[escolha-1] * taxa_venda[escolha-1]/100){
+        if (valor_venda > moedas[escolha] * cotacao[escolha-1] - moedas[escolha] * cotacao[escolha-1] * taxavenda[escolha-1]/100){
         // if (valor_venda < moedas[0]-moedas[0]*taxa_venda[escolha-1]/100){
-            printf("O saldo em criptomoedas nao pode ficar negativo.\nInsira um valor ate %.2f (taxa de venda: %.0f%%)\n", moedas[escolha] * cotacoes[escolha-1] - moedas[escolha] * cotacoes[escolha-1] * taxa_venda[escolha-1]/100, taxa_venda[escolha-1]);
+            printf("O saldo em criptomoedas nao pode ficar negativo.\nInsira um valor ate %.2f [taxa de venda: %.0f%%]\n", moedas[escolha] * cotacao[escolha-1] - moedas[escolha] * cotacao[escolha-1] * taxavenda[escolha-1]/100, taxavenda[escolha-1]);
             continue;}
         else if (valor_venda == 0){
             printf("Compra cancelada.\n");
@@ -457,14 +483,15 @@ void venda_criptomoedas(int linha_usuario){
             printf("O valor de venda nao pode ser negativo. Insira um valor valido.");
             continue;}
     int digito;
-    float saldo_convertido_em_cripto; // valor de venda convertido em cripto
-    saldo_convertido_em_cripto = (valor_venda - (valor_venda*(taxa_venda[escolha-1]/100))) / cotacoes[escolha-1];
+    saldo_convertido_em_cripto = (valor_venda - (valor_venda*(taxavenda[escolha-1]/100))) / cotacao[escolha-1];
 
-    printf("R$ %.2f equivale a %.6f %s. Deseja confirmar a venda?\n1. Confirmar | 0. Cancelar a venda: ", valor_venda, saldo_convertido_em_cripto, siglas[escolha-1]);
+    printf("R$ %.2f equivale a %.6f %s [taxa de venda: %.0f%%]. Deseja confirmar a venda?\n1. Confirmar | 0. Cancelar a venda: ", valor_venda, saldo_convertido_em_cripto, sigla_cripto[escolha-1], taxavenda[escolha - 1]);
     scanf("%d", &digito);
     if (digito == 1) {
         printf("Venda confirmada.\n");
+        printf("moedas[escolha] = %f", moedas[escolha]);
         moedas[escolha] -= saldo_convertido_em_cripto;
+        printf("moedas[escolha] = %f", moedas[escolha]);
         break;
     } else if (digito == 0) {
         printf("Venda cancelada.\n");
@@ -474,13 +501,16 @@ void venda_criptomoedas(int linha_usuario){
         continue;}
     }
 
-    moedas[0] += valor_venda - valor_venda * taxa_venda[escolha-1]/100;
+    moedas[0] += valor_venda - valor_venda * taxavenda[escolha-1]/100;
 
     sobrescrever_dados(linha_usuario, cpf, senha, nome_investidor, moedas, quantidade_criptomoedas);
 
+    
     char operacao = '-'; //chamar funcao de extrato
-    adicionar_linha_extrato(linha_usuario, operacao, (valor_venda - valor_venda * taxa_venda[escolha-1]/100)/cotacoes[escolha-1], siglas[escolha-1], cotacoes[escolha-1], taxa_venda[escolha-1], moedas);
-}
+    float taxa = taxacompra[escolha-1];
+
+    adicionar_linha_extrato(linha_usuario, operacao, saldo_convertido_em_cripto, escolha, taxa);
+    }
 
 int main(void){
     long cpf_login;
@@ -515,14 +545,19 @@ int main(void){
     }
 
     menu(); //printa o menu
-    float moedas[4] = {0.0f};
+    
+    int quantidade_criptomoedas = 0;
+    contar_criptomoedas(&quantidade_criptomoedas); // contar qtde criptomoedas
+
+    float *moedas = malloc(quantidade_criptomoedas * sizeof(*moedas));
     char nome_investidor[200];
     long cpf;
     int senha;
     int senha_novamente;
 
     int i = 1;
-    while(i >= 1 && i <= 8) { //switch responsavel por controlar o codigo inteiro (apos login)
+    // while(i >= 1 && i <= 8) { //switch responsavel por controlar o codigo inteiro (apos login)
+    do{
         printf("\nSelecione a operacao desejada ou digite 8 para ver o menu novamente: ");
         scanf("%d", &i);
             
@@ -607,12 +642,15 @@ int main(void){
                 free(taxacompra);
                 break;
             case 8:
+                printf("\n8. Menu:\n");
                 menu();
                 break;
-            default: //0 ou qualquer outro numero diferente de 1 a 8 finaliza o switch
-                printf("Saindo...\n");
+        case 0:
+                printf("\nVoce saiu do sistema. Ate logo!\n");
+                break;
+            default:
+                printf("\nOpcao invalida.\n");
                 break;
         }
-    }
+    } while(i != 0);
 };
-
